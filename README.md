@@ -2,13 +2,14 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/FullStack-Music%20Player-blue?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Mood-Based-AI-green?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/AI-Powered-green?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Face%20Detection-MediaPipe-orange?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Node.js-Backend-black?style=for-the-badge" />
   <img src="https://img.shields.io/badge/React-Frontend-61dafb?style=for-the-badge" />
 </p>
 
 <p align="center">
-  <b>🚀 Intelligent Music Player that understands your mood</b>
+  <b>🚀 AI-Powered Music Player with Mood Detection</b>
 </p>
 
 ---
@@ -16,10 +17,12 @@
 ## 🌟 Features
 
 - 🎯 Mood-Based Song Recommendation  
+- 🤖 AI Playlist Generator (Gemini/OpenAI Ready)  
+- 📸 Face Detection using MediaPipe  
 - ⚡ Real-Time Music Playback  
 - 🔐 Authentication System  
 - 📂 Playlist Management  
-- 🧠 AI Ready Architecture  
+- 🧠 Smart Recommendation Engine  
 
 ---
 
@@ -27,12 +30,13 @@
 
 ```mermaid
 graph TD;
-    A[User Mood Input] --> B[Frontend React App]
-    B --> C[Backend API]
-    C --> D[MongoDB Songs DB]
-    D --> C
-    C --> E[Filtered Songs]
-    E --> F[Audio Player]
+    A[User Face / Mood Input] --> B[MediaPipe Face Detection]
+    B --> C[Mood Detection Logic]
+    C --> D[Backend API]
+    D --> E[AI Recommendation Engine]
+    E --> F[MongoDB Songs DB]
+    F --> G[Filtered Songs]
+    G --> H[Audio Player]
 ```
 
 ---
@@ -44,7 +48,18 @@ graph TD;
 | Frontend    | React.js, Tailwind CSS |
 | Backend     | Node.js, Express.js |
 | Database    | MongoDB |
-| DevOps      | Docker, GitHub Actions, Nginx |
+| AI Layer    | MediaPipe, Gemini API / OpenAI |
+
+---
+
+## 🧠 AI Capabilities
+
+- Detect user mood using face expressions (MediaPipe)
+- Generate smart playlists using AI APIs
+- Future support for:
+  - 🎙️ Voice mood detection  
+  - 📝 Auto Lyrics Generator  
+  - 🎧 Personalized recommendations  
 
 ---
 
@@ -54,6 +69,7 @@ graph TD;
 ModiBeats-AI/
 ├── client/          # React frontend
 ├── server/          # Node.js backend
+├── ai/              # AI logic (MediaPipe + API)
 ├── docker/          # Docker configs
 ├── .github/         # CI/CD workflows
 └── README.md
@@ -72,7 +88,7 @@ POST /api/recommend
 ### Request
 ```json
 {
-  "mood": "chill"
+  "mood": "happy"
 }
 ```
 
@@ -125,21 +141,19 @@ docker-compose up --build
 
 ---
 
-## 📸 Screenshots
+## 📸 Demo
 
-<p align="center">
-  <img src="https://via.placeholder.com/800x400.png?text=Music+Player+UI" width="80%" />
-</p>
+> Add GIF showing face detection + music auto-play
 
 ---
 
 ## 🚀 Future Enhancements
 
-- 🤖 AI Mood Detection (Face / Voice)
-- 📊 Listening Analytics
-- ⚡ WebSocket Real-Time Sync
-- ☁️ AWS Deployment
-- 🧠 ML Recommendation Engine
+- 🤖 Advanced AI Recommendations  
+- ⚡ Real-Time Mood Sync (WebSockets)  
+- ☁️ AWS Deployment  
+- 📊 Listening Analytics  
+- 🧠 ML-Based Recommendation Engine  
 
 ---
 
