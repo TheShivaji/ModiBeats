@@ -45,7 +45,7 @@ graph TD;
 
 | Layer       | Technology |
 |------------|-----------|
-| Frontend    | React.js, Tailwind CSS |
+| Frontend    | React.js, Tailwind CSS/SCSS |
 | Backend     | Node.js, Express.js |
 | Database    | MongoDB |
 | AI Layer    | MediaPipe, Gemini API / OpenAI |
