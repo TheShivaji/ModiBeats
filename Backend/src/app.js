@@ -1,15 +1,10 @@
-const express = require("express")
-const cookieParser = require("cookie-parser");
-const authRouter = require("./routes/auth.routes");
+import express from "express";
+import cookieParser from "cookie-parser";
+import authRouter from "./routes/auth.routes.js";
 
 const app = express();
 app.use(express.json())
 app.use(cookieParser())
 
-// api/auth/signup
 app.use("/api/auth" , authRouter)
-
-
-
-
-module.exports = app
+export default app
