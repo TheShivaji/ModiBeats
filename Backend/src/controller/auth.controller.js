@@ -58,40 +58,48 @@ export const signup = async (req, res) => {
 }
 export const loginController = async (req, res) => {
     try {
-        const { username, email, password } = req.body
+        const { username, email, password } = req.body;
+
+        
         const user = await userModel.findOne({
             $or: [
-                { username },
-                { email }
+                { username: username }, 
+                { email: email }
             ]
-        }).select("+password")
+        }).select("+password");
+
         if (!user) {
-            return res.status(400).json({
-                message: "Invalid Credentia"
-            })
+            return res.status(401).json({ message: "Invalid Credentials" });
         }
 
-        const isValidPassword = await bcrypt.compare(password, user.password)
+        // 2. Password check
+        const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
-            return res.status(400).json({
-                message: "Invalid Credential"
-            })
+            return res.status(401).json({ message: "Invalid Credentials" });
         }
-        const token = jwt.sign({
-            id: user._id
-        }, process.env.JWT_SECERT,
+
+        // 3. Token generation (Spelling check: SECRET)
+        const token = jwt.sign(
+            { id: user._id }, 
+            process.env.JWT_SECRET || process.env.JWT_SECERT, 
             { expiresIn: "7d" }
-        )
-        res.cookie("token", token)
+        );
+
+        // 4. Send response safely
+        res.cookie("token", token, { httpOnly: true }); // 
+
+        
+        const userObj = user.toObject();
+        delete userObj.password;
 
         res.status(200).json({
-            message: "User are successfully login"
-        })
+            message: "User successfully logged in",
+            user: userObj
+        });
+
     } catch (error) {
-        console.log("Error in login controller", error.message)
-        res.status(500).json({
-            message: "Internal server error"
-        })
+        console.log("Error in login controller:", error.message);
+        res.status(500).json({ message: "Internal server error" });
     }
 }
 
