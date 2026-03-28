@@ -1,34 +1,35 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken" 
 import {redis} from "../config/cache.js"
 
-export const authUser = async (req , res , next) =>{
-const token = req.cookies.token
-if(!token){
-    return res.status(401).json({
-        message : "Unauthorized token"
-    })
-}
+export const authUser = async (req, res, next) => {
+    const token = req.headers.authorization?.split(" ")[1]
 
-const blackList = await redis.get(token)
+    if (!token) {
+        return res.status(401).json({
+            message: "Unauthorized"
+        })
+    }
 
-if(blackList){
-    return res.status(401).json({
-        message : "Invalid token"
-    })
-}
-let decoded;
-try {
-    decoded = jwt.verify(token , process.env.JWT_SECERT)
+    const isBlacklisted = await redis.get(token)
 
-    req.user = decoded
+    if (isBlacklisted) {
+        return res.status(401).json({
+            message: "Token revoked"
+        })
+    }
 
-    next()
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECERT)
 
-} catch (error) {
-    console.log("Error in authMiddleware" , error.message)
-    return res.status(401).json({ 
-            message: "Invalid or Expired Token", 
-            error: error.message 
-        });
-}
+        req.user = decoded
+
+        next()
+
+    } catch (error) {
+        console.error("Auth Middleware Error:", error.message)
+
+        return res.status(401).json({
+            message: "Invalid or Expired Token"
+        })
+    }
 }

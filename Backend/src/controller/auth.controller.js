@@ -1,7 +1,10 @@
+import dotenv from "dotenv"
+dotenv.config()
+
 import { userModel } from "../models/user.models.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import {redis} from "../config/cache.js"
+import { redis } from "../config/cache.js"
 
 
 export const signup = async (req, res) => {
@@ -19,51 +22,59 @@ export const signup = async (req, res) => {
             });
         }
         const isAlreadyExist = await userModel.findOne({
-        $or: [
-            { username },
-            { email }
-        ]
-    })
-    if (isAlreadyExist) {
-        return res.status(400).json({
-            message: "User are already exist"
+            $or: [
+                { username },
+                { email }
+            ]
+        })
+        if (isAlreadyExist) {
+            return res.status(400).json({
+                message: "User are already exist"
+            })
+        }
+
+        const hash = await bcrypt.hash(password, 10)
+
+        const user = await userModel.create({
+            username: username,
+            email: email,
+            password: hash
+        })
+
+        const token = jwt.sign({
+            id: user._id
+        }, process.env.JWT_SECERT,
+            { expiresIn: "15m" }
+        )
+        const refreshToken = jwt.sign({
+            id: user._id
+        }, process.env.REFRESH_JWT,
+            { expiresIn: "7d" })
+
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true
+        })
+
+        res.status(201).json({
+            message: "User are successfully signup"
+        })
+    } catch (error) {
+        console.log("Error in signup Controller", error.message)
+        res.status(500).json({
+            message: "Internal server error "
         })
     }
-
-    const hash = await bcrypt.hash(password, 10)
-
-    const user = await userModel.create({
-        username: username,
-        email: email,
-        password: hash
-    })
-
-    const token = jwt.sign({
-        id: user._id
-    }, process.env.JWT_SECERT,
-        { expiresIn: "7d" }
-    )
-    res.cookie("token", token)
-
-    res.status(201).json({
-        message: "User are successfully signup"
-    })
-} catch (error) {
-    console.log("Error in signup Controller", error.message)
-    res.status(500).json({
-        message: "Internal server error "
-    })
-}
 
 }
 export const loginController = async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        
+
         const user = await userModel.findOne({
             $or: [
-                { username: username }, 
+                { username: username },
                 { email: email }
             ]
         }).select("+password");
@@ -78,23 +89,34 @@ export const loginController = async (req, res) => {
             return res.status(401).json({ message: "Invalid Credentials" });
         }
 
-        // 3. Token generation (Spelling check: SECRET)
-        const token = jwt.sign(
-            { id: user._id }, 
-            process.env.JWT_SECRET || process.env.JWT_SECERT, 
-            { expiresIn: "7d" }
+        // 3. Token generation 
+        const accesstoken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET || process.env.JWT_SECERT,
+            { expiresIn: "15m" }
         );
-
-        // 4. Send response safely
-        res.cookie("token", token, { httpOnly: true }); // 
-
         
+
+        //Refresh token when access token expired
+        const refreshToken = jwt.sign({
+            id: user._id
+        }, process.env.REFRESH_JWT,
+            { expiresIn: "7d" })
+
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true
+
+        })
+
+
         const userObj = user.toObject();
         delete userObj.password;
 
         res.status(200).json({
             message: "User successfully logged in",
-            user: userObj
+            user: userObj,
+            accesstoken: accesstoken
         });
 
     } catch (error) {
@@ -126,4 +148,35 @@ export const logoutController = (req, res) => {
     res.status(200).json({
         message: "logout successfully."
     })
+}
+
+export const refreshController = (req, res) => {
+
+    const refreshToken = req.cookies.refreshToken
+
+    if (!refreshToken) {
+        return res.status(401).json({
+            message: "user are not authorized"
+        })
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_JWT)
+        
+        const newAccessToken = jwt.sign(
+            { id: decoded.id },
+            process.env.JWT_SECERT,
+            { expiresIn: "15m" }
+        )
+
+        return res.json({
+            accessToken: newAccessToken
+        })
+
+    } catch (error) {
+        console.log(`Refresh Error ${error.message}`)
+        return res.status(403).json({
+            message: "Invalid refresh token"
+        })
+    }
 }
