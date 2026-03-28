@@ -16,10 +16,10 @@ export const useAuth = () => {
         try {
             const data = await Signup({ username, email, password })
             setuser(data.user)
-            return true   
+            return true
         } catch (error) {
             console.log("Error in handleSignup", error.message)
-            return false 
+            return false
         } finally {
             setloading(false)
         }
@@ -30,10 +30,10 @@ export const useAuth = () => {
         try {
             const data = await Login({ username, email, password })
             setuser(data.user)
-            return true   
+            return true
         } catch (error) {
             console.log("Error in handleLogin", error.message)
-            return false  
+            return false
         } finally {
             setloading(false)
         }
@@ -67,9 +67,9 @@ export const useAuth = () => {
         }
     }
 
-   useEffect(() => {
-    handleGetMe()
-   }, [])
+    // useEffect(() => {
+    //     handleGetMe()
+    // }, [])
 
     return {
         user,

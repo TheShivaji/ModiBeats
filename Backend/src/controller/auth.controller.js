@@ -95,15 +95,15 @@ export const loginController = async (req, res) => {
             process.env.JWT_SECRET || process.env.JWT_SECERT,
             { expiresIn: "15m" }
         );
-        
+
 
         //Refresh token when access token expired
         const refreshToken = jwt.sign({
             id: user._id
         }, process.env.REFRESH_JWT,
             { expiresIn: "7d" })
-
-
+        const userId = user._id.toString()
+        redis.set(userId, refreshToken, 'EX', 7 * 24 * 60 * 60)
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true
 
@@ -150,27 +150,51 @@ export const logoutController = (req, res) => {
     })
 }
 
-export const refreshController = (req, res) => {
-
-    const refreshToken = req.cookies.refreshToken
-
-    if (!refreshToken) {
-        return res.status(401).json({
-            message: "user are not authorized"
-        })
-    }
-
+export const refreshController = async (req, res) => {
     try {
+
+        const refreshToken = req.cookies.refreshToken
+
+        if (!refreshToken) {
+            return res.status(401).json({
+                message: "user are not authorized"
+            })
+        }
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_JWT)
-        
-        const newAccessToken = jwt.sign(
-            { id: decoded.id },
-            process.env.JWT_SECERT,
+        console.log(decoded)
+        const userId = decoded.id
+
+        const storedToken = await redis.get(userId)
+
+        // Hai check kar raha hai store Token ko redis me vah same ky refresh se
+        if (refreshToken !== storedToken) {
+            return res.status(403).json({
+                message: "Invalid refresh token"
+            })
+        }
+
+        await redis.del(userId)
+
+        const newRefreshToken = jwt.sign({
+            id: userId
+        }, process.env.REFRESH_JWT,
+            { expiresIn: "7d" }
+        )
+
+        await redis.set(userId, newRefreshToken, 'EX', 7 * 24 * 60 * 60)
+
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true
+        });
+
+        const accesstoken = jwt.sign({
+            id: userId
+        }, process.env.JWT_SECERT,
             { expiresIn: "15m" }
         )
 
-        return res.json({
-            accessToken: newAccessToken
+        res.status(200).json({
+            accessToken: accesstoken
         })
 
     } catch (error) {
